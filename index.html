@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANPR Detection Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1f2937;
+    --accent: #2563eb;
+    --bg: #f4f6f8;
+    --card-bg: #ffffff;
+    --text-color: #111827;
+    --shadow: rgba(0,0,0,0.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
+  body { background: var(--bg); color: var(--text-color); }
+  header { background: var(--primary); color: white; padding: 20px; text-align: center; font-size: 1.8rem; font-weight: 700; }
+  main { max-width: 900px; margin: 30px auto; padding: 20px; }
+  .upload-section { background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px var(--shadow); text-align: center; }
+  .upload-section input[type="file"] { margin-top: 15px; }
+  button { margin-top: 20px; padding: 12px 25px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: 0.3s; }
+  button:hover { background: #1d4ed8; }
+  .results { margin-top: 30px; }
+  .plate-card { background: var(--card-bg); padding: 15px 20px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 3px 10px var(--shadow); display: flex; justify-content: space-between; align-items: center; }
+  .plate-number { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
+  .timestamp { font-size: 0.9rem; color: #555; }
+  footer { text-align: center; margin: 50px 0 20px 0; color: #777; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<header>ANPR Detection Portal</header>
+
+<main>
+  <div class="upload-section">
+    <h2>Upload Image or Video for Number Plate Detection</h2>
+    <p>Supports JPG, PNG, MP4, AVI, MOV formats.</p>
+
+    <!-- UPDATED INPUT -->
+    <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.mp4,.avi,.mov">
+    <br>
+
+    <button onclick="uploadFile()">Detect Plates</button>
+  </div>
+
+  <div class="results" id="results"></div>
+</main>
+
+<footer>ANPR System &copy; 2026</footer>
+
+<script>
+async function uploadFile() {
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("Please select an image or video.");
+    return;
+  }
+
+  const formData = new FormData();
+
+  // IMPORTANT: backend expects 'file'
+  formData.append('file', file);
+
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = "<p>Processing, please wait...</p>";
+
+  try {
+    const response = await fetch('/api/anpr', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) throw new Error("Server error");
+
+    const data = await response.json();
+
+    if (!data.plates || data.plates.length === 0) {
+      resultsDiv.innerHTML = "<p>No number plates detected.</p>";
+      return;
+    }
+
+    resultsDiv.innerHTML = "";
+
+    data.plates.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'plate-card';
+      card.innerHTML = `
+        <span class="plate-number">${p.number}</span>
+        <span class="timestamp">${p.time}</span>
+      `;
+      resultsDiv.appendChild(card);
+    });
+
+  } catch (err) {
+    resultsDiv.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+  }
+}
+</script>
+
+</body>
+</html>

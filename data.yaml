@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['0']
+
+roboflow:
+  workspace: projects-3epz1
+  project: projects-3epz1
+  version: dataset
+  license: Private
+  url: https://app.roboflow.com/projects-3epz1/projects-3epz1/dataset
